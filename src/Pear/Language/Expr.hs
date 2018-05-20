@@ -4,6 +4,7 @@ import Pear.Language.Lexer
 import Pear.Language.Utils
 import Text.Parsec as P
 import Text.Parsec.Expr as E
+import Pear.Language.Names
 
 
 data Literal a =
@@ -31,12 +32,12 @@ parseBooleanLiteral =
 parseArrayLiteral :: TokenParser a -> TokenParser (Literal a)
 parseArrayLiteral p = ArrayLiteral <$> squares (P.sepBy p comma)
 
-newtype OpName = OpName String deriving Show
 
 data Expr =
     Literal SourceSpan (Literal Expr)
   | UnaryMinus SourceSpan Expr
   | BinaryNoParens Expr Expr Expr
+  | Op SourceSpan OpName
   | IfThenElse Expr Expr Expr
   deriving (Show)
 

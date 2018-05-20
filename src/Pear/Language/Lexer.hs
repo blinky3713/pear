@@ -21,9 +21,6 @@ languageDef =
                                    , "true"
                                    , "false"
                                    ]
-             , L.reservedOpNames = ["+", "-", "*", "/", ":="
-                                   , "<", ">", "&&", "||", "not"
-                                   ]
              }
 
 lexer :: Token.GenTokenParser String u Identity
