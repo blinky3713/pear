@@ -38,6 +38,7 @@ data Token =
   | LBrace
   | Comma
   | Equals
+  | RArrow
   deriving (Eq, Show)
 
 data PositionedToken =
@@ -58,19 +59,20 @@ annotate p = do
 parseToken :: Lexer Token
 parseToken = P.choice $
     [ P.try $ TIdentifier <$> Token.identifier lexer
-    , TStringLit <$> Token.stringLiteral lexer
+    , P.try $ TStringLit <$> Token.stringLiteral lexer
+    , P.try $ Token.lexeme lexer parseNatOrFloat
+    , P.try $ Token.lexeme lexer parseName
+    , P.try $ Token.lexeme lexer $ P.string "[" *> pure LBrace
+    , P.try $ Token.lexeme lexer $ P.string "]" *> pure RBrace
+    , P.try $ Token.lexeme lexer $ P.string "," *> pure Comma
+    , P.try $ Token.lexeme lexer $ P.string "=" *> pure Equals
+    , P.try $ Token.lexeme lexer $ P.string "->" *> pure RArrow
     , Token.lexeme lexer $ TSymbol <$> P.many1 (P.satisfy isSymbolChar)
-    , Token.lexeme lexer parseNatOrFloat
-    , Token.lexeme lexer parseName
-    , Token.lexeme lexer $ P.string "[" *> pure LBrace
-    , Token.lexeme lexer $ P.string "]" *> pure RBrace
-    , Token.lexeme lexer $ P.string "," *> pure Comma
-    , Token.lexeme lexer $ P.string "=" *> pure Equals
     ]
   where
 
     isSymbolChar :: Char -> Bool
-    isSymbolChar c = c `elem` "-:*+/&<=>|"
+    isSymbolChar c = c `elem` "-:*+/&<=>\\|"
 
     parseName :: Lexer Token
     parseName = TName <$> ((:) <$> P.lower <*> P.many P.alphaNum)
@@ -101,6 +103,7 @@ prettyPrintToken t = case t of
   LBrace -> "]"
   Comma -> ","
   Equals -> "="
+  RArrow -> "->"
 
 --------------------------------------------------------------------------------
 -- | TokenParser
@@ -171,3 +174,9 @@ squares = P.between lbrace rbrace
 
 comma :: TokenParser ()
 comma = match Comma
+
+rarrow :: TokenParser ()
+rarrow = match RArrow
+
+equals :: TokenParser ()
+equals = match Equals

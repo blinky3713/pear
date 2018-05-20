@@ -37,6 +37,8 @@ data Expr =
   | Op SourceSpan OpName
   | IfThenElse Expr Expr Expr
   | Var SourceSpan Ident
+  | App Expr Expr
+  | Abs Binder Expr
   deriving (Show)
 
 parseIfThenElse :: TokenParser Expr
@@ -49,6 +51,17 @@ parseIfThenElse = do
   e <- parseValue
   pure $ IfThenElse c t e
 
+parseAbs :: TokenParser Expr
+parseAbs = do
+    symbol' "\\"
+    args <- P.many1 (Abs <$> parseBinderNoParens)
+    rarrow
+    value <- parseValue
+    return $ toFunction args value
+  where
+    toFunction :: [Expr -> Expr] -> Expr -> Expr
+    toFunction args value = foldr ($) value args
+
 parseIdentifierAndValue :: TokenParser Expr
 parseIdentifierAndValue = do
   (ss, name) <- withSourceSpan (,) identifier
@@ -57,6 +70,7 @@ parseIdentifierAndValue = do
 parseValueAtom :: TokenParser Expr
 parseValueAtom = P.choice
   [ P.try parseIfThenElse
+  , parseAbs
   , parseIdentifierAndValue
   , withSourceSpan Literal $ parseArrayLiteral parseValue
   , withSourceSpan Literal $ parseIntLiteral
@@ -72,14 +86,17 @@ parseInfixExpr = withSourceSpan Op parseOperator
 -- | Parse an expression
 parseValue :: TokenParser Expr
 parseValue =
-    E.buildExpressionParser operators parseValueAtom P.<?> "expression"
+    E.buildExpressionParser operators (buildPostfixParser postfixTable indexersAndAccessors) P.<?> "expression"
   where
+    postfixTable = [ \v -> P.try (flip App <$> indexersAndAccessors) <*> pure v]
     operators = [ [ E.Prefix (withSourceSpan (\ss _ -> UnaryMinus ss) (symbol' "-"))
                   ]
                 , [ E.Infix (P.try (parseInfixExpr P.<?> "infix expression") >>= \ident ->
                       return (BinaryNoParens ident)) E.AssocRight
                   ]
                 ]
+indexersAndAccessors :: TokenParser Expr
+indexersAndAccessors = buildPostfixParser [] parseValueAtom
 
 parseExpr :: [PositionedToken] -> Either ParseError Expr
 parseExpr = P.parse parseValue ""
@@ -87,15 +104,3 @@ parseExpr = P.parse parseValue ""
 parseExpr' s = pearLexer s >>= parseExpr
 
 --------------------------------------------------------------------------------
-
--- | Read source position information
-withSourceSpan
-  :: (SourceSpan -> a -> b)
-  -> P.Parsec [PositionedToken] u a
-  -> P.Parsec [PositionedToken] u b
-withSourceSpan f p = do
-  start <- P.getPosition
-  x <- p
-  end <- P.getPosition
-  let sp = SourceSpan start end
-  return $ f sp x
