@@ -36,6 +36,7 @@ data Expr =
   | BinaryNoParens Expr Expr Expr
   | Op SourceSpan OpName
   | IfThenElse Expr Expr Expr
+  | Var SourceSpan Ident
   deriving (Show)
 
 parseIfThenElse :: TokenParser Expr
@@ -48,9 +49,15 @@ parseIfThenElse = do
   e <- parseValue
   pure $ IfThenElse c t e
 
+parseIdentifierAndValue :: TokenParser Expr
+parseIdentifierAndValue = do
+  (ss, name) <- withSourceSpan (,) identifier
+  return (Var ss (Ident name))
+
 parseValueAtom :: TokenParser Expr
 parseValueAtom = P.choice
   [ P.try parseIfThenElse
+  , parseIdentifierAndValue
   , withSourceSpan Literal $ parseArrayLiteral parseValue
   , withSourceSpan Literal $ parseIntLiteral
   , withSourceSpan Literal $ parseNumericLiteral

@@ -9,9 +9,9 @@ import Control.Monad
 
 data Binder =
     VarBinder SourceSpan Ident
-  | OpBinder SourceSpan OpName
-  | NamedBinder SourceSpan Ident Binder
-  | PositionedBinder SourceSpan Binder
+--  | OpBinder SourceSpan OpName
+--  | NamedBinder SourceSpan Ident Binder
+--  | PositionedBinder SourceSpan Binder
   deriving (Show)
 
 parseVarOrNamedBinder :: TokenParser Binder
