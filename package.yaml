@@ -27,6 +27,7 @@ library:
   source-dirs: src
   default-extensions:
     - StandaloneDeriving
+    - DeriveFunctor
 
 executables:
   pear-exe:
