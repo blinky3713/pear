@@ -36,6 +36,10 @@ data Token =
   | TBoolLit Bool
   | TIdentifier String
   | TSymbol String
+  | TName String
+  | RBrace
+  | LBrace
+  | Comma
   deriving (Eq, Show)
 
 data PositionedToken =
@@ -61,6 +65,10 @@ parseToken = P.choice $
     , TNumber <$> Token.float lexer
     , TStringLit <$> (Token.identifier lexer)
     , TSymbol <$> P.many1 (P.satisfy isSymbolChar)
+    , parseName
+    , P.string "[" *> pure LBrace
+    , P.string "]" *> pure RBrace
+    , P.string "," *> pure Comma
     ]
   where
 
@@ -72,6 +80,9 @@ parseToken = P.choice $
 
     isSymbolChar :: Char -> Bool
     isSymbolChar c = c `elem` "+-:*/&<=>|"
+
+    parseName :: Lexer Token
+    parseName = TName <$> ((:) <$> P.lower <*> P.many P.alphaNum)
 
 pearLexer :: String -> Either P.ParseError [PositionedToken]
 pearLexer = P.parse (PC.many1 ps) ""
@@ -87,6 +98,10 @@ prettyPrintToken t = case t of
   TBoolLit b -> show b
   TIdentifier n -> n
   TSymbol s -> s
+  TName n -> n
+  RBrace -> "["
+  LBrace -> "]"
+  Comma-> ","
 
 --------------------------------------------------------------------------------
 -- | TokenParser
@@ -135,3 +150,26 @@ symbol = token go P.<?> "symbol"
   where
     go (TSymbol s) = Just s
     go _ = Nothing
+
+symbol' :: String -> TokenParser ()
+symbol' s = token go P.<?> show s
+  where
+  go (TSymbol s') | s == s'   = Just ()
+  go _ = Nothing
+
+
+reserved :: String -> TokenParser ()
+reserved s = token go P.<?> show s
+  where
+  go (TName s') | s == s' = Just ()
+  go (TSymbol s') | s == s' = Just ()
+  go _ = Nothing
+
+squares :: TokenParser a -> TokenParser a
+squares = P.between lbrace rbrace
+  where
+    lbrace = match LBrace
+    rbrace = match RBrace
+
+comma :: TokenParser ()
+comma = match Comma
