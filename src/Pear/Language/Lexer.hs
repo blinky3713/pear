@@ -64,9 +64,9 @@ parseToken = P.choice $
     , Token.lexeme lexer $ TSymbol <$> P.many1 (P.satisfy isSymbolChar)
     , Token.lexeme lexer parseNatOrFloat
     , Token.lexeme lexer parseName
-    , P.string "[" *> pure LBrace
-    , P.string "]" *> pure RBrace
-    , P.string "," *> pure Comma
+    , Token.lexeme lexer $ P.string "[" *> pure LBrace
+    , Token.lexeme lexer $ P.string "]" *> pure RBrace
+    , Token.lexeme lexer $ P.string "," *> pure Comma
     ]
   where
 
@@ -155,7 +155,6 @@ symbol' s = token go P.<?> show s
   where
   go (TSymbol s') | s == s'   = Just ()
   go _ = Nothing
-
 
 reserved :: String -> TokenParser ()
 reserved s = token go P.<?> show s

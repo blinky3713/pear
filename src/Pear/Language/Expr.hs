@@ -37,7 +37,6 @@ data Expr =
     Literal SourceSpan (Literal Expr)
   | UnaryMinus SourceSpan Expr
   | BinaryNoParens Expr Expr Expr
-  | Op SourceSpan OpName
   | IfThenElse Expr Expr Expr
   deriving (Show)
 
