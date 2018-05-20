@@ -59,36 +59,35 @@ annotate p = do
 
 parseToken :: Lexer Token
 parseToken = P.choice $
-    [ P.try boolLit
-    , TIdentifier <$> Token.identifier lexer
-    , TInt <$> Token.integer lexer
-    , TNumber <$> Token.float lexer
-    , TStringLit <$> (Token.identifier lexer)
-    , TSymbol <$> P.many1 (P.satisfy isSymbolChar)
-    , parseName
+    [ P.try $ TIdentifier <$> Token.identifier lexer
+    , TStringLit <$> Token.stringLiteral lexer
+    , Token.lexeme lexer $ TSymbol <$> P.many1 (P.satisfy isSymbolChar)
+    , Token.lexeme lexer parseNatOrFloat
+    , Token.lexeme lexer parseName
     , P.string "[" *> pure LBrace
     , P.string "]" *> pure RBrace
     , P.string "," *> pure Comma
     ]
   where
 
-    boolLit :: Lexer Token
-    boolLit = Token.lexeme lexer $
-      PC.choice [ Token.reserved lexer "true" *> pure (TBoolLit True)
-                , Token.reserved lexer "false" *> pure (TBoolLit False)
-                ]
-
     isSymbolChar :: Char -> Bool
-    isSymbolChar c = c `elem` "+-:*/&<=>|"
+    isSymbolChar c = c `elem` "-:*+/&<=>|"
 
     parseName :: Lexer Token
     parseName = TName <$> ((:) <$> P.lower <*> P.many P.alphaNum)
+
+    parseNatOrFloat :: Lexer Token
+    parseNatOrFloat = do
+      eRes <- Token.naturalOrFloat lexer
+      pure $ case eRes of
+        Left n -> TInt n
+        Right f -> TNumber f
 
 pearLexer :: String -> Either P.ParseError [PositionedToken]
 pearLexer = P.parse (PC.many1 ps) ""
   where
     ps :: Lexer PositionedToken
-    ps = annotate  parseToken
+    ps = annotate parseToken
 
 prettyPrintToken :: Token -> String
 prettyPrintToken t = case t of

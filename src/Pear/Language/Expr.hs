@@ -25,7 +25,8 @@ parseStringLiteral :: TokenParser (Literal a)
 parseStringLiteral = StringLiteral <$> stringLiteral
 
 parseBooleanLiteral :: TokenParser (Literal a)
-parseBooleanLiteral = BooleanLiteral <$> boolLiteral
+parseBooleanLiteral =
+  (reserved "true" *> pure (BooleanLiteral True)) P.<|> (reserved "false" *> pure (BooleanLiteral False))
 
 parseArrayLiteral :: TokenParser a -> TokenParser (Literal a)
 parseArrayLiteral p = ArrayLiteral <$> squares (P.sepBy p comma)
@@ -52,13 +53,12 @@ parseIfThenElse = do
 
 parseValueAtom :: TokenParser Expr
 parseValueAtom = P.choice
-  [ withSourceSpan Literal $ parseIntLiteral
-  , withSourceSpan Literal $ parseNumericLiteral
-  , withSourceSpan Literal $ parseNumericLiteral
-  , withSourceSpan Literal $ parseStringLiteral
-  , withSourceSpan Literal $ parseBooleanLiteral
+  [ P.try parseIfThenElse
   , withSourceSpan Literal $ parseArrayLiteral parseValue
-  , parseIfThenElse
+  , withSourceSpan Literal $ parseIntLiteral
+  , withSourceSpan Literal $ parseNumericLiteral
+  , P.try $ withSourceSpan Literal $ parseBooleanLiteral
+  , withSourceSpan Literal $ parseStringLiteral
   ]
 
 -- | Parse an expression in backticks or an operator
