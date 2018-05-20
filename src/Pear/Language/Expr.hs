@@ -12,7 +12,7 @@ data Literal a =
   | StringLiteral String
   | BooleanLiteral Bool
   | ArrayLiteral [a]
-  deriving (Show)
+  deriving (Show, Functor)
 
 parseIntLiteral :: TokenParser (Literal a)
 parseIntLiteral = IntLiteral <$> intLiteral
