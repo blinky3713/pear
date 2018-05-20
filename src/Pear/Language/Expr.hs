@@ -6,7 +6,6 @@ import Text.Parsec as P
 import Text.Parsec.Expr as E
 import Pear.Language.Names
 
-
 data Literal a =
     IntLiteral Integer
   | NumericLiteral Double
@@ -14,7 +13,6 @@ data Literal a =
   | BooleanLiteral Bool
   | ArrayLiteral [a]
   deriving (Show)
-
 
 parseIntLiteral :: TokenParser (Literal a)
 parseIntLiteral = IntLiteral <$> intLiteral
@@ -31,7 +29,6 @@ parseBooleanLiteral =
 
 parseArrayLiteral :: TokenParser a -> TokenParser (Literal a)
 parseArrayLiteral p = ArrayLiteral <$> squares (P.sepBy p comma)
-
 
 data Expr =
     Literal SourceSpan (Literal Expr)
@@ -64,9 +61,6 @@ parseValueAtom = P.choice
 -- | Parse an expression in backticks or an operator
 parseInfixExpr :: TokenParser Expr
 parseInfixExpr = withSourceSpan Op parseOperator
-  where
-    parseOperator :: TokenParser OpName
-    parseOperator = OpName <$> symbol
 
 -- | Parse an expression
 parseValue :: TokenParser Expr
@@ -82,7 +76,6 @@ parseValue =
 
 parseExpr :: [PositionedToken] -> Either ParseError Expr
 parseExpr = P.parse parseValue ""
-
 
 parseExpr' s = pearLexer s >>= parseExpr
 

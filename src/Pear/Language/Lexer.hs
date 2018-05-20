@@ -37,6 +37,7 @@ data Token =
   | RBrace
   | LBrace
   | Comma
+  | Equals
   deriving (Eq, Show)
 
 data PositionedToken =
@@ -64,6 +65,7 @@ parseToken = P.choice $
     , Token.lexeme lexer $ P.string "[" *> pure LBrace
     , Token.lexeme lexer $ P.string "]" *> pure RBrace
     , Token.lexeme lexer $ P.string "," *> pure Comma
+    , Token.lexeme lexer $ P.string "=" *> pure Equals
     ]
   where
 
@@ -97,7 +99,8 @@ prettyPrintToken t = case t of
   TName n -> n
   RBrace -> "["
   LBrace -> "]"
-  Comma-> ","
+  Comma -> ","
+  Equals -> "="
 
 --------------------------------------------------------------------------------
 -- | TokenParser
@@ -135,8 +138,8 @@ boolLiteral = token go P.<?> "bool literal"
     go (TBoolLit b) = Just b
     go _ = Nothing
 
-identLiteral :: TokenParser String
-identLiteral = token go P.<?> "identifier"
+identifier :: TokenParser String
+identifier = token go P.<?> "identifier"
   where
     go (TIdentifier s) | s `notElem` (L.reservedNames languageDef) = Just s
     go _ = Nothing
