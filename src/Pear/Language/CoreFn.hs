@@ -2,6 +2,7 @@ module Pear.Language.CoreFn where
 
 import Pear.Language.Utils
 import qualified Pear.Language.Expr as E
+import qualified Pear.Language.Lexer (pearLexer)
 import qualified Pear.Language.Names as N
 import qualified Text.Parsec as P
 import Pear.Language.Types
@@ -18,7 +19,7 @@ data Binder =
   | VarBinder Ann N.Ident
   deriving (Show)
 
-data Bind = NonRec Ann N.Ident Expr
+data Bind = NonRec Ann N.Ident Expr deriving (Show)
 
 data Expr
   = Literal Ann (E.Literal Expr)
@@ -63,3 +64,6 @@ exprToCoreFn ss ty (E.IfThenElse v1 v2 v3) =
 exprToCoreFn  _ _ e =
   error $ "Unexpected value in exprToCoreFn mn: " ++ show e
 
+
+parseToCore :: String -> Either P.ParseError [Bind]
+parseToCore s = declToCoreFn <$> D.parseDecl' s

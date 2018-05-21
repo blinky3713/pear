@@ -33,8 +33,6 @@ parseArrayLiteral p = ArrayLiteral <$> squares (P.sepBy p comma)
 data Expr =
     Literal SourceSpan (Literal Expr)
   | UnaryMinus SourceSpan Expr
-  | BinaryNoParens Expr Expr Expr
-  | Op SourceSpan OpName
   | IfThenElse Expr Expr Expr
   | Var SourceSpan Ident
   | App Expr Expr
@@ -70,6 +68,7 @@ parseIdentifierAndValue = do
 parseValueAtom :: TokenParser Expr
 parseValueAtom = P.choice
   [ P.try parseIfThenElse
+  , parens parseValueAtom
   , parseAbs
   , parseIdentifierAndValue
   , withSourceSpan Literal $ parseArrayLiteral parseValue
@@ -79,10 +78,6 @@ parseValueAtom = P.choice
   , withSourceSpan Literal $ parseStringLiteral
   ]
 
--- | Parse an expression in backticks or an operator
-parseInfixExpr :: TokenParser Expr
-parseInfixExpr = withSourceSpan Op parseOperator
-
 -- | Parse an expression
 parseValue :: TokenParser Expr
 parseValue =
@@ -90,9 +85,6 @@ parseValue =
   where
     postfixTable = [ \v -> P.try (flip App <$> indexersAndAccessors) <*> pure v]
     operators = [ [ E.Prefix (withSourceSpan (\ss _ -> UnaryMinus ss) (symbol' "-"))
-                  ]
-                , [ E.Infix (P.try (parseInfixExpr P.<?> "infix expression") >>= \ident ->
-                      return (BinaryNoParens ident)) E.AssocRight
                   ]
                 ]
 indexersAndAccessors :: TokenParser Expr

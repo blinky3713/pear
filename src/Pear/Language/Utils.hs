@@ -1,11 +1,23 @@
 module Pear.Language.Utils where
 
 import Text.Parsec as P
+import Text.Parsec.Pos as Pos
+import Data.Monoid
+
+
+class Monad m => MonadSupply m where
+  fresh :: m Int
+
+freshName :: MonadSupply m => m String
+freshName = fmap (("$" <> ) . show) fresh
 
 data SourceSpan =
   SourceSpan { ssStart :: P.SourcePos
              , ssEnd :: P.SourcePos
              } deriving  (Show)
+
+nullSourceSpan :: SourceSpan
+nullSourceSpan = SourceSpan (Pos.newPos "" 0 0) (Pos.newPos "" 0 0)
 
 -- | Read source position information
 withSourceSpan

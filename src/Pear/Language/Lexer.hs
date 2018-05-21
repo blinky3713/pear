@@ -36,6 +36,8 @@ data Token =
   | TName String
   | RBrace
   | LBrace
+  | RParen
+  | LParen
   | Comma
   | Equals
   | RArrow
@@ -64,6 +66,8 @@ parseToken = P.choice $
     , P.try $ Token.lexeme lexer parseName
     , P.try $ Token.lexeme lexer $ P.string "[" *> pure LBrace
     , P.try $ Token.lexeme lexer $ P.string "]" *> pure RBrace
+    , P.try $ Token.lexeme lexer $ P.string "(" *> pure LParen
+    , P.try $ Token.lexeme lexer $ P.string ")" *> pure RParen
     , P.try $ Token.lexeme lexer $ P.string "," *> pure Comma
     , P.try $ Token.lexeme lexer $ P.string "=" *> pure Equals
     , P.try $ Token.lexeme lexer $ P.string "->" *> pure RArrow
@@ -171,6 +175,12 @@ squares = P.between lbrace rbrace
   where
     lbrace = match LBrace
     rbrace = match RBrace
+
+parens :: TokenParser a -> TokenParser a
+parens = P.between lparen rparen
+  where
+    lparen = match LParen
+    rparen = match RParen
 
 comma :: TokenParser ()
 comma = match Comma
