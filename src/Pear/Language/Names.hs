@@ -8,23 +8,13 @@ newtype OpName = OpName String deriving Show
 
 data Ident
   = Ident String
-  | GenIdent Int
 --  | GenIdent (Maybe String) Integer
 --  | UnusedIdent
   deriving (Show, Eq, Ord)
 
 
-freshIdent' :: MonadSupply m => m Ident
-freshIdent' = GenIdent <$> fresh
-
-
 data Name
   = IdentName Ident
-  | ValOpName OpName
-
--- | Parse an operator.
-parseOperator :: TokenParser OpName
-parseOperator = OpName <$> symbol
 
 -- | Parse an identifier.
 parseIdent :: TokenParser Ident

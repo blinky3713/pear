@@ -5,6 +5,7 @@ import Pear.Language.Utils
 import Text.Parsec as P
 import Text.Parsec.Expr as E
 import Pear.Language.Names
+import Pear.Language.Types
 
 data Literal a =
     IntLiteral Integer
@@ -37,6 +38,7 @@ data Expr =
   | Var SourceSpan Ident
   | App Expr Expr
   | Abs Binder Expr
+  | TypedValue Expr Type
   deriving (Show)
 
 parseIfThenElse :: TokenParser Expr
