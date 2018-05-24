@@ -20,6 +20,7 @@ freeTypeVars :: Type -> S.Set String
 freeTypeVars ty = case ty of
   TypeVar n -> S.singleton n
   TypeApp t1 t2 -> freeTypeVars t1 `S.union` freeTypeVars t2
+  TypeConstructor _ -> S.empty
 
 freeTypeVarsS :: Scheme -> S.Set String
 freeTypeVarsS (Scheme vars t) = freeTypeVars t S.\\ S.fromList vars
@@ -60,11 +61,11 @@ generalize env t =
   let vars = S.toList (freeTypeVarsEnv env S.\\ freeTypeVars t)
   in Scheme vars t
 
-newtype TI a = TI {runTI :: ExceptT String (ReaderT Environment (State Int)) a }
-  deriving (Functor, Applicative, Monad, MonadError String, MonadReader Environment, MonadState Int)
+newtype TI a = TI {runTI :: ExceptT String (State Int) a }
+  deriving (Functor, Applicative, Monad, MonadError String, MonadState Int)
 
-execTI :: Environment -> TI a -> Either String a
-execTI e action = runExceptT (runTI action) &flip runReaderT e & flip evalState 0
+execTI :: TI a -> Either String a
+execTI action = runExceptT (runTI action) & flip evalState 0
 
 newTyVar :: String -> TI Type
 newTyVar prefix = do
@@ -83,24 +84,56 @@ mgu (TypeApp l r) (TypeApp l' r') = do
   s1 <- mgu l l'
   s2 <- mgu (applySubs s1 r) (applySubs s1 r')
   return $ s1 `composeSubs` s2
+mgu t (TypeVar u) = varBind u t
 mgu (TypeVar u) t = varBind u t
-  where
-    varBind :: String -> Type -> TI Subs
-    varBind u t
-      | t == TypeVar u = return nullSubs
-      | u `S.member` freeTypeVars t = throwError $ "occurs check fails " ++ u ++ " vs. " ++ show t
-      | otherwise = pure $ M.singleton u t
 mgu (TypeConstructor _) _ = pure nullSubs
+
+varBind :: String -> Type -> TI Subs
+varBind u t
+  | t == TypeVar u = return nullSubs
+  | u `S.member` freeTypeVars t = throwError $ "occurs check fails " ++ u ++ " vs. " ++ show t
+  | otherwise = pure $ M.singleton u t
+
+ti :: Environment -> Expr -> TI (Subs, Type)
+ti (Environment e) (Var ss (Ident n)) =
+  case M.lookup n e of
+    Nothing -> throwError $ "Unbound variable: " ++ "Pos " ++ show ss ++ " , type name " ++ n
+    Just sigma -> do
+      t <- instantiate sigma
+      return (nullSubs, t)
+ti _ (Literal _ lit) = pure (nullSubs, inferLit lit)
+ti env (Abs (VarBinder _ (Ident n)) e2) = do
+  tv <- newTyVar "a"
+  let Environment env' = remove env n
+      env'' = Environment (env' `M.union` (M.singleton n (Scheme [] tv)))
+  (s1, t1) <- ti env'' e2
+  pure $ (s1, TypeApp tyFunction (TypeApp (applySubs s1 tv) t1))
+ti env exp@(App e1 e2) = do
+    tv <- newTyVar "a"
+    (s1, t1) <- ti env e1
+    (s2, t2) <- ti (applySubsEnv s1 env) e2
+    s3 <- mgu (applySubs s2 t1) (TypeApp tyFunction (TypeApp t2 tv))
+    pure $ (s3 `composeSubs` s2 `composeSubs` s1, applySubs s3 tv)
+  `catchError` \e -> throwError $ e ++ "\n in " ++ show exp
+
+typeInference :: M.Map String Scheme -> Expr -> TI Type
+typeInference env e = do
+  (s, t) <- ti (Environment env) e
+  pure $ (applySubs s t)
+
+testTypeChecker :: String -> IO ()
+testTypeChecker str = do
+  case parseExpr' str of
+    Left e -> print $ "ParseError: " ++ show e
+    Right expr -> case execTI (typeInference M.empty expr) of
+      Left e -> print $ str ++ "\n " ++ e ++ "\n"
+      Right t -> print $ str ++ " :: " ++ prettyPrintType t
+
 --------------------------------------------------------------------------------
-
-infer :: Expr -> Expr
-infer expr = case expr of
-  Literal ss lit -> inferLit ss lit
-
-inferLit :: SourceSpan -> Literal Expr-> Expr
-inferLit ss lit = case lit of
-  IntLiteral v -> TypedValue (Literal ss $ IntLiteral v) tyInt
-  NumericLiteral v -> TypedValue (Literal ss $ NumericLiteral v) tyNumber
-  StringLiteral v -> TypedValue (Literal ss $ StringLiteral v) tyString
-  BooleanLiteral v -> TypedValue (Literal ss $ BooleanLiteral v) tyBoolean
-  ArrayLiteral v -> error "TODO: Array Literal"
+inferLit :: Literal Expr -> Type
+inferLit lit = case lit of
+  IntLiteral _ ->  tyInt
+  NumericLiteral _ ->  tyNumber
+  StringLiteral _ ->  tyString
+  BooleanLiteral _ -> tyBoolean
+  ArrayLiteral _ -> error "TODO: Array Literal"
