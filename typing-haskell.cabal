@@ -1,0 +1,37 @@
+name:                typing-haskell
+version:             0.1.0.0
+-- synopsis:
+-- description:
+homepage:            https://github.com/githubuser/typing-haskell#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Author name here
+maintainer:          example@example.com
+copyright:           2018 Author name here
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+extra-source-files:  README.md
+
+executable typing-haskell
+  hs-source-dirs:      src
+  other-modules:       Language.Utils
+                       Language.Lexer
+                       Language.Parser
+                       Language.Names
+                       Language.Expr
+  main-is:             Main.hs
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5
+                     , parsec
+
+test-suite typing-haskell-test-suite
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  other-modules:       Spec.ParserSpec
+  build-depends:       base
+                     , hspec
+                     , hspec-discover
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
