@@ -32,6 +32,14 @@ spec =
           parsedExpr = fmap forgetExprAnn (parseExprFromStr s)
       parsedExpr `shouldBe` Right e
 
+    it "can parse numeric literals" $ do
+      let parsedExpr1 = fmap forgetExprAnn (parseExprFromStr "1.0")
+          parsedExpr2 = fmap forgetExprAnn (parseExprFromStr "3")
+          parsedExpr3 = fmap forgetExprAnn (parseExprFromStr "-3")
+      parsedExpr1 `shouldBe` Right (Literal () (NumericLiteral 1.0))
+      parsedExpr2 `shouldBe` Right (Literal () (IntLiteral 3))
+      parsedExpr3 `shouldBe` Right (UnaryMinus (Literal () (IntLiteral 3)))
+
 testExpr1 :: (String, Expr ())
 testExpr1 =
   let testExpr = "f x"
