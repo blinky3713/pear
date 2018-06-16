@@ -13,14 +13,13 @@ build-type:          Simple
 cabal-version:       >=1.10
 extra-source-files:  README.md
 
-executable typing-haskell
+library
   hs-source-dirs:      src
-  other-modules:       Language.Utils
+  exposed-modules:     Language.Utils
                        Language.Lexer
                        Language.Parser
                        Language.Names
                        Language.Expr
-  main-is:             Main.hs
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
                      , parsec
@@ -33,5 +32,6 @@ test-suite typing-haskell-test-suite
   build-depends:       base
                      , hspec
                      , hspec-discover
+                     , typing-haskell
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010

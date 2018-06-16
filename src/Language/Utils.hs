@@ -14,7 +14,7 @@ freshName = fmap (("$" <> ) . show) fresh
 data SourceSpan =
   SourceSpan { ssStart :: P.SourcePos
              , ssEnd :: P.SourcePos
-             }
+             } deriving Eq
 
 nullSourceSpan :: SourceSpan
 nullSourceSpan = SourceSpan (Pos.newPos "" 0 0) (Pos.newPos "" 0 0)

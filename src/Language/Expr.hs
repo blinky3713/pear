@@ -1,9 +1,11 @@
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 module Language.Expr where
 
 import Language.Utils
 import Language.Names
+import Data.Functor
 
 data Literal a =
     IntLiteral Integer
@@ -13,6 +15,8 @@ data Literal a =
   | ArrayLiteral [a]
   deriving Functor
 
+deriving instance Eq a => Eq (Literal a)
+deriving instance Show a => Show (Literal a)
 
 data Expr a =
     Literal a (Literal (Expr a))
@@ -20,6 +24,13 @@ data Expr a =
   | IfThenElse (Expr a) (Expr a) (Expr a)
   | Var a Ident
   | App (Expr a) (Expr a)
-  | Abs Binder (Expr a)
+  | Abs (Binder a) (Expr a)
+  deriving Functor
+
+deriving instance Eq a => Eq (Expr a)
+deriving instance Show a => Show (Expr a)
+
+forgetExprAnn :: Expr a -> Expr ()
+forgetExprAnn = (<$) ()
 
 type PositionedExpr = Expr SourceSpan

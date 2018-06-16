@@ -77,6 +77,7 @@ indexersAndAccessors = buildPostfixParser [] parseValueAtom
 parseExpr :: [Positioned Token] -> Either ParseError PositionedExpr
 parseExpr = P.parse parseValue ""
 
-parseExpr' s = pearLexer s >>= parseExpr
+parseExprFromStr :: String -> Either ParseError PositionedExpr
+parseExprFromStr s = pearLexer s >>= parseExpr
 
 --------------------------------------------------------------------------------
