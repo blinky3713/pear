@@ -4,6 +4,7 @@ import Language.Parser
 import Language.Expr
 import Language.Names
 import Test.Hspec
+import Data.List (intercalate)
 
 spec :: Spec
 spec =
@@ -26,6 +27,11 @@ spec =
           parsedExpr = fmap forgetExprAnn (parseExprFromStr s)
       parsedExpr `shouldBe` Right e
 
+    it "can parse array literals" $ do
+      let (s, e) = testExpr4
+          parsedExpr = fmap forgetExprAnn (parseExprFromStr s)
+      parsedExpr `shouldBe` Right e
+
 testExpr1 :: (String, Expr ())
 testExpr1 =
   let testExpr = "f x"
@@ -45,3 +51,8 @@ testExpr3 =
       (s1, e1) = testExpr1
       testExpr = "if p then " ++ s1 ++ " else " ++ s2
   in (testExpr, IfThenElse (Var () (Ident "p")) e1 e2)
+
+testExpr4 :: (String, Expr ())
+testExpr4 =
+  let (s,e) = testExpr1
+  in ("[" ++ intercalate ", " (replicate 3 s) ++ "]", Literal () (ArrayLiteral [e,e,e]))
