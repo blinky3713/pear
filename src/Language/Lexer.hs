@@ -99,6 +99,8 @@ prettyPrintToken t = case t of
   TName n -> n
   RBrace -> "["
   LBrace -> "]"
+  LParen -> "("
+  RParen -> ")"
   Comma -> ","
   Equals -> "="
   RArrow -> "->"

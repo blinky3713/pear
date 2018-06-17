@@ -1,5 +1,6 @@
 module Spec.ParserSpec where
 
+import Data.Either (isRight)
 import Language.Parser
 import Language.Expr
 import Language.Names
@@ -40,6 +41,11 @@ spec =
       parsedExpr2 `shouldBe` Right (Literal () (IntLiteral 3))
       parsedExpr3 `shouldBe` Right (UnaryMinus (Literal () (IntLiteral 3)))
 
+    it "can parse parens expressions" $ do
+      let (s, e) = testExpr5
+          parsedExpr5 = fmap forgetExprAnn (parseExprFromStr s)
+      parsedExpr5 `shouldBe` Right e
+
 testExpr1 :: (String, Expr ())
 testExpr1 =
   let testExpr = "f x"
@@ -64,3 +70,10 @@ testExpr4 :: (String, Expr ())
 testExpr4 =
   let (s,e) = testExpr1
   in ("[" ++ intercalate ", " (replicate 3 s) ++ "]", Literal () (ArrayLiteral [e,e,e]))
+
+testExpr5 :: (String, Expr ())
+testExpr5 =
+  let (s, e) = testExpr2
+      testExpr = "\\f -> (" ++ s ++ ")"
+      desired = Abs (VarBinder () (Ident "f")) e
+  in (testExpr, desired)
