@@ -79,13 +79,13 @@ instance Types t => Types [t] where
 -- | Constraint system
 --------------------------------------------------------------------------------
 
-data Pred = IsIn Ident Type deriving Eq
+data Pred = IsIn Ident Type deriving (Eq, Show)
 
 instance Types Pred where
   apply s (IsIn i t) = IsIn i (apply s t)
   tv (IsIn _ t) = tv t
 
-data Qual t = [Pred] :=> t deriving Eq
+data Qual t = [Pred] :=> t deriving (Eq, Show)
 
 newtype Subst = Subst [(Tyvar, Type)]
 
@@ -116,7 +116,7 @@ instance Monoid Subst where
 -- | Type Schemes
 --------------------------------------------------------------------------------
 
-data Scheme = Forall [Kind] (Qual Type) deriving Eq
+data Scheme = Forall [Kind] (Qual Type) deriving (Eq, Show)
 
 instance Types Scheme where
   apply s (Forall ks t) = Forall ks (apply s t)

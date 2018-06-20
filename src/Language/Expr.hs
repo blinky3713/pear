@@ -6,6 +6,7 @@ module Language.Expr where
 import Language.Utils
 import Language.Names
 import Data.Functor
+import Language.Types
 
 data Literal a =
     IntLiteral Integer
@@ -18,7 +19,7 @@ data Literal a =
 deriving instance Eq a => Eq (Literal a)
 deriving instance Show a => Show (Literal a)
 
-
+-- TODO: For now, only BVar can be parsed
 data Binder a =
     BVar a Ident
   | BWildcard a
@@ -28,6 +29,11 @@ data Binder a =
 deriving instance Eq a => Eq (Binder a)
 deriving instance Show a => Show (Binder a)
 
+type BindGroup a = ([Expl a], [[Impl a]])
+type Expl a = (Ident, Scheme, [Alt a])
+type Impl a = (Ident, [Alt a])
+type Alt a = ([Binder a], Expr a)
+
 data Expr a =
     Literal a (Literal (Expr a))
   | UnaryMinus (Expr a)
@@ -35,6 +41,7 @@ data Expr a =
   | Var a Ident
   | App (Expr a) (Expr a)
   | Abs (Binder a) (Expr a)
+  | Let (BindGroup a) (Expr a)
   deriving Functor
 
 deriving instance Eq a => Eq (Expr a)
