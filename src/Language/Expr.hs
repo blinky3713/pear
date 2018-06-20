@@ -7,6 +7,7 @@ import Language.Utils
 import Language.Names
 import Data.Functor
 import Language.Types
+import Data.Monoid ((<>))
 
 data Literal a =
     IntLiteral Integer
@@ -49,5 +50,14 @@ deriving instance Show a => Show (Expr a)
 
 forgetExprAnn :: Expr a -> Expr ()
 forgetExprAnn = (<$) ()
+
+-- TODO make a comonad
+extractAnn :: Monoid a => Expr a -> a
+extractAnn (Literal a b) = a
+extractAnn (UnaryMinus a) = extractAnn a
+extractAnn (IfThenElse i t e) = extractAnn i <> extractAnn t <> extractAnn e
+extractAnn (App e1 e2) = extractAnn e1 <> extractAnn e2
+extractAnn (Abs b e) = extractAnn e
+extractAnn (Let bg e) = extractAnn e
 
 type PositionedExpr = Expr SourceSpan
