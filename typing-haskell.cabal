@@ -20,8 +20,13 @@ library
                        Language.Parser
                        Language.Names
                        Language.Expr
+                       Language.Types
+                       Language.Typechecker
+                       Language.Entailment
+                       Language.TypeInference
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
+                     , mtl
                      , parsec
 
 test-suite typing-haskell-test-suite
