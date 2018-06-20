@@ -81,3 +81,12 @@ parseExprFromStr :: String -> Either ParseError PositionedExpr
 parseExprFromStr s = pearLexer s >>= parseExpr
 
 --------------------------------------------------------------------------------
+
+parseVarOrNamedBinder :: TokenParser (Binder SourceSpan)
+parseVarOrNamedBinder = withSourceSpanF $ do
+  name <- parseIdent
+  return (`BVar` name)
+
+parseBinderNoParens  :: TokenParser (Binder SourceSpan)
+parseBinderNoParens = parseVarOrNamedBinder
+

@@ -22,20 +22,3 @@ data Name
 parseIdent :: TokenParser Ident
 parseIdent = Ident <$> identifier
 
-data Binder a =
-    VarBinder a Ident
---  | OpBinder SourceSpan OpName
---  | NamedBinder SourceSpan Ident Binder
---  | PositionedBinder SourceSpan Binder
-  deriving Functor
-
-deriving instance Eq a => Eq (Binder a)
-deriving instance Show a => Show (Binder a)
-
-parseVarOrNamedBinder :: TokenParser (Binder SourceSpan)
-parseVarOrNamedBinder = withSourceSpanF $ do
-  name <- parseIdent
-  return (`VarBinder` name)
-
-parseBinderNoParens  :: TokenParser (Binder SourceSpan)
-parseBinderNoParens = parseVarOrNamedBinder

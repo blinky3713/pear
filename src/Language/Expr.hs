@@ -18,6 +18,16 @@ data Literal a =
 deriving instance Eq a => Eq (Literal a)
 deriving instance Show a => Show (Literal a)
 
+
+data Binder a =
+    BVar a Ident
+  | BWildcard a
+  | BLit (Literal a)
+  deriving Functor
+
+deriving instance Eq a => Eq (Binder a)
+deriving instance Show a => Show (Binder a)
+
 data Expr a =
     Literal a (Literal (Expr a))
   | UnaryMinus (Expr a)
