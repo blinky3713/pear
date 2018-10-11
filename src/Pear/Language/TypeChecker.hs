@@ -137,3 +137,7 @@ inferLit lit = case lit of
   StringLiteral _ ->  tyString
   BooleanLiteral _ -> tyBoolean
   ArrayLiteral _ -> error "TODO: Array Literal"
+
+foo :: Int -> Int
+foo 1 = 2
+foo x = x + x

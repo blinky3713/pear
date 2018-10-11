@@ -1,4 +1,9 @@
-module Pear.Language.Lexer where
+module Pear.Language.Lexer
+  (-- Token(..)
+  -- , pearLexer
+  -- get rid of
+   module Pear.Language.Lexer
+  ) where
 
 import Data.Functor.Identity
 import Text.Parsec.Char (letter, alphaNum)
@@ -10,14 +15,16 @@ import qualified Text.ParserCombinators.Parsec.Language as L
 
 languageDef :: L.LanguageDef st
 languageDef =
-  L.emptyDef { L.commentStart    = "/*"
-             , L.commentEnd      = "*/"
-             , L.commentLine     = "//"
+  L.emptyDef { L.commentStart    = "{-"
+             , L.commentEnd      = "-}"
+             , L.commentLine     = "--"
              , L.identStart      = letter
              , L.identLetter     = alphaNum
              , L.reservedNames   = [ "if"
                                    , "then"
                                    , "else"
+                                   , "let"
+                                   , "in"
                                    , "true"
                                    , "false"
                                    ]
@@ -31,8 +38,11 @@ data Token =
   | TNumber Double
   | TStringLit String
   | TBoolLit Bool
+  -- an identifier is anything which is not a symbol or a name
   | TIdentifier String
+  -- symbols are used for infix operators
   | TSymbol String
+  -- TODO: why are names needed
   | TName String
   | RBrace
   | LBrace
@@ -76,7 +86,7 @@ parseToken = P.choice $
   where
 
     isSymbolChar :: Char -> Bool
-    isSymbolChar c = c `elem` "-:*+/&<=>\\|"
+    isSymbolChar c = c `elem` "-:*+/&<=>\\|%{}"
 
     parseName :: Lexer Token
     parseName = TName <$> ((:) <$> P.lower <*> P.many P.alphaNum)
